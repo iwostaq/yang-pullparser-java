@@ -1,4 +1,4 @@
-//  build.gradle for yang-pullparser-java
+//  build.gradle for yang-pullparser-java project
 
 apply plugin: 'java'
 apply plugin: 'antlr'
@@ -12,14 +12,32 @@ repositories {
 }
 
 dependencies {
-  antlr 'org.antlr:antlr4:4.6'
+  antlr   'org.antlr:antlr4:4.7'
+  compile 'org.antlr:antlr4:4.7'
+  runtime 'org.antlr:antlr4-runtime:4.7'
   testCompile 'junit:junit:4.12'
-  runtime 'org.antlr:antlr4-runtime:4.6'
+}
+
+sourceSets {
+  tool {
+    java {
+      srcDir 'src/tool/java'
+      compileClasspath += sourceSets.main.compileClasspath
+      compileClasspath += sourceSets.main.output
+    }
+  }
+
+  main {
+    antlr {
+      srcDirs 'src/main/antlr'
+    }
+  }
 }
 
 task jarTool(type: Jar) {
   manifest {
-    attributes "Main-Class" : "iwostaq.yppj.tool.AppMain"
+    attributes("Main-Class" : "iwostaq.yppj.tool.AppMain",
+               "Implementation-Version" : "0.9")
   }
   archiveName = "${project.name}-tool.jar"
   from "${buildDir}/classes/main"
@@ -33,16 +51,6 @@ task jarTool(type: Jar) {
   }
 }
 
-sourceSets {
-  tool {
-    java {
-      srcDir 'src/tool/java'
-      compileClasspath += sourceSets.main.compileClasspath
-      compileClasspath += sourceSets.main.output
-    }
-  }
-}
-
 generateGrammarSource {
   outputDirectory = file('src/main/java/iwostaq/yppj/g/')  
 }
@@ -53,5 +61,8 @@ compileJava {
 
 jar {
   dependsOn compileToolJava, jarTool
+}
+
+clean {
 }
 
