@@ -1,0 +1,21 @@
+module testmodule-00string {
+  namespace "urn:ns-00string";
+  prefix pre-01;
+
+  revision 2017-01-01 {
+    description "a string" + " seperated by a plus.";
+  }
+
+  revision 2017-01-02 {
+    description unquoted-string-should-be-ok;
+  }
+
+  revision 2017-01-03 {
+    description "backslash \n is a meta character to escape 4 chars";
+  }
+
+  revision 2017-01-04 {
+    description '[0-9]+(d|days|h|hours|hr|m|min|minutes|'+
+                 's|sec|seconds|w|weeks|wk|y|years|yr){0,1}';
+  }
+}

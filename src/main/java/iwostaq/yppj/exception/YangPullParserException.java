@@ -2,6 +2,10 @@ package iwostaq.yppj.exception;
 
 import iwostaq.yppj.Message;
 
+/**
+ * An exception for the yang-pullparser-java.
+ * 
+ */
 public class YangPullParserException extends Exception {
 
   /**
@@ -14,8 +18,19 @@ public class YangPullParserException extends Exception {
   /**
    * Constructor.
    * 
-   * @param messageId the message ID
-   * @param args argument array for the message
+   * @param e the underlying exception
+   */
+  public YangPullParserException(Throwable e) {
+    super(e);
+  }
+
+  /**
+   * Constructor.
+   * 
+   * @param messageId
+   *          the message ID
+   * @param args
+   *          argument array for the message
    */
   public YangPullParserException(String messageId, Object... args) {
     super(Message.getById(messageId, args));

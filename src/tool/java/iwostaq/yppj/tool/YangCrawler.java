@@ -1,6 +1,8 @@
 package iwostaq.yppj.tool;
 
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.util.Stack;
@@ -15,39 +17,16 @@ import iwostaq.yppj.exception.YangPullParserException;
  * A crawler that lists all the statements in a given Yang model.
  * 
  */
-public final class YangCrawler {
+public final class YangCrawler extends AppMain.AppFunction {
 
   private Stack<String> stmtStack;
-
-  private Reader fromReader;
-
-  private PrintStream toOutputStream;
 
   /**
    * Constructor.
    * 
-   * @param fromReader
-   *          the reader where data is read
-   * @param toOutputStream
-   *          the output stream where the list is written to
    */
-  public YangCrawler(Reader fromReader, PrintStream toOutputStream) {
-    if (fromReader == null || toOutputStream == null) {
-      throw new IllegalArgumentException();
-    }
+  public YangCrawler() {
     this.stmtStack = new Stack<>();
-    this.fromReader = fromReader;
-    this.toOutputStream = toOutputStream;
-  }
-
-  /**
-   * Constructor. The output is set to standard output.
-   * 
-   * @param fromReader
-   *          the reader where data is read from
-   */
-  public YangCrawler(Reader fromReader) {
-    this(fromReader, System.out);
   }
 
   /**
@@ -58,46 +37,71 @@ public final class YangCrawler {
    * @throws YangPullParserException
    *           raised when parsing problems are occurred.
    */
-  public void crawl() throws IOException, YangPullParserException {
-    YangPullParser ypp = new YangPullParserImpl(this.fromReader);
+  @Override
+  protected void start()
+      throws IOException, YangPullParserException {
 
-    while (true) {
-      EventType eventType = ypp.next();
-      if (eventType == EventType.END_MODULE) {
-        break;
+    Reader fromFileReader = null;
+    try {
+      if (super.args.length == 0) {
+        fromFileReader = new InputStreamReader(System.in);
+      } else {
+        fromFileReader = new FileReader(super.args[0]);
       }
 
-      switch (eventType) {
-      case STATEMENT_START:
-        StatementType stmt = ypp.getStatementType();
-        String namespace = ypp.getNamespace();
-        String identifier = ypp.getIdentifier();
-        String argument = ypp.getArgument();
-        String elem = null;
-        if (identifier == null) {
-          elem = String.format("%s(%s)", stmt.name(), argument);
-        } else {
-          if (namespace == null) {
-            elem = String.format("%s[%s]", stmt.name(), identifier);
+      this.crawlThroughFile(new YangPullParserImpl(fromFileReader));
+    } finally {
+      if (fromFileReader != null) {
+        fromFileReader.close();
+      }
+    }
+  }
+
+  private void crawlThroughFile(YangPullParser ypp) throws YangPullParserException {
+    assert (ypp != null);
+
+    PrintStream toStream = System.out;
+    try {
+      while (true) {
+        EventType eventType = ypp.next();
+        if (eventType == EventType.END_MODULE) {
+          break;
+        }
+
+        switch (eventType) {
+        case STATEMENT_START:
+          StatementType stmt = ypp.getStatementType();
+          String namespace = ypp.getNamespace();
+          String identifier = ypp.getIdentifier();
+          String argument = ypp.getArgument();
+          String elem = null;
+          if (identifier == null) {
+            elem = String.format("%s(%s)", stmt.name(), argument);
           } else {
-            elem = String.format("%s[%s:%s]", stmt.name(), namespace, identifier);
+            if (namespace == null) {
+              elem = String.format("%s[%s]", stmt.name(), identifier);
+            } else {
+              elem = String.format("%s[%s:%s]", stmt.name(), namespace, identifier);
+            }
           }
-        }
-        this.stmtStack.push(elem);
+          this.stmtStack.push(elem);
 
-        for (String s : this.stmtStack) {
-          this.toOutputStream.print('/');
-          this.toOutputStream.print(s);
-        }
-        this.toOutputStream.println();
+          for (String s : this.stmtStack) {
+            toStream.print('/');
+            toStream.print(s);
+          }
+          toStream.println();
 
-        break;
-      case STATEMENT_END:
-        this.stmtStack.pop();
-        break;
-      case END_MODULE:
-        throw new YangPullParserException();
+          break;
+        case STATEMENT_END:
+          this.stmtStack.pop();
+          break;
+        case END_MODULE:
+          throw new YangPullParserException();
+        }
       }
+    } catch (IOException e) {
+      throw new YangPullParserException(e);
     }
   }
 }

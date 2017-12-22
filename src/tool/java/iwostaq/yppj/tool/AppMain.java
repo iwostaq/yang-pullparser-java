@@ -1,8 +1,7 @@
 package iwostaq.yppj.tool;
 
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
+import java.util.Arrays;
 
 import iwostaq.yppj.exception.YangPullParserException;
 
@@ -19,38 +18,58 @@ public final class AppMain {
       "\tcrawls a YANG file given as the argument.",
   };
 
-  public static void main(String[] args) throws IOException, YangPullParserException {
+  public static void main(String[] args) {
     if (args.length < 1) {
-      AppMain.help();
-      throw new IllegalArgumentException("no arg");
+      System.err.println("no command given");
+      return;
     }
 
-    switch (args[0]) {
-    case "crawl":
-      yangCrawler(args[1]);
-      break;
-    default:
-      AppMain.help();
-      System.exit(0);
+    try {
+      AppFunction func;
+      switch (args[0]) {
+      case "crawl":
+        func = new YangCrawler();
+        break;
+      case "lex":
+        func = new SimpleLexer();
+        break;
+      default:
+        func = new AppMain.HelpDisplayer();
+      }
+
+      func.setArguments(Arrays.copyOfRange(args, 1, args.length));
+      func.start();
+    } catch (Exception e) {
+      e.printStackTrace();
     }
   }
 
-  /**
-   * Prints help messages in the standard output.
-   */
-  private static void help() {
-    for (String helpMessage : AppMain.HELP_MESSAGES) {
-      System.out.println(helpMessage);
+  protected static abstract class AppFunction {
+    protected String[] args;
+
+    protected AppFunction() {
+      this.args = new String[0];
     }
+
+    protected void setArguments(String[] args) {
+      if (args == null) {
+        args = new String[0];
+      }
+
+      this.args = args;
+    }
+
+    protected abstract void start() throws YangPullParserException, IOException;
   }
 
   /**
-   * Calls the YangCrawler.
+   * A class responsible for printing help messages.
    */
-  private static void yangCrawler(String filePath) throws IOException, YangPullParserException {
-    try (Reader fromReader = new FileReader(filePath)) {
-      YangCrawler yangCrawler = new YangCrawler(fromReader);
-      yangCrawler.crawl();
+  protected static class HelpDisplayer extends AppFunction {
+    protected void start() {
+      for (String helpMessage : AppMain.HELP_MESSAGES) {
+        System.out.println(helpMessage);
+      }
     }
   }
 }

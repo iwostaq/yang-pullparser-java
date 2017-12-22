@@ -1,0 +1,11 @@
+module testmodule-01yangversion11 {
+  namespace "urn:ns-01yangversion11";
+
+  prefix  pre-01 ;
+
+  yang-version 1.1; 
+
+  container c-01 {
+    action act-01;
+  }
+}

@@ -18,7 +18,7 @@ public final class Message {
 
   public static String getById(String id, Object... args) {
     String format;
-  
+
     if (Message.bundle.containsKey(id)) {
       format = Message.bundle.getString(id);
     } else {
@@ -27,7 +27,7 @@ public final class Message {
         format = format + " " + Arrays.toString(args);
       }
     }
-    
+
     return MessageFormat.format(format, args);
   }
 }

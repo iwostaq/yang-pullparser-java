@@ -1,11 +1,8 @@
 package iwostaq.yppj;
 
 import static org.junit.Assert.*;
-
 import java.io.FileReader;
-
 import org.junit.Test;
-
 import iwostaq.yppj.YangPullParser.StatementType;
 
 public class YppTest02Body {
@@ -629,7 +626,7 @@ public class YppTest02Body {
       YangPullParser ypp = new YangPullParserImpl(fromFile);
       ypp.next();
       Util.assertStartStatementWithId(ypp, StatementType.MODULE, null, "testmodule-02grouping");
-  
+
       ypp.next();
       Util.assertStartStatementWithStringArg(ypp, StatementType.NAMESPACE, "urn:ns-02grouping");
       ypp.next();
@@ -678,7 +675,7 @@ public class YppTest02Body {
       Util.assertEndStatementWithId(ypp, StatementType.TYPEDEF, null, "td-01");
       ypp.next();
       Util.assertEndStatementWithId(ypp, StatementType.GROUPING, null, "gr-04");
-      
+
       ypp.next();
       Util.assertStartStatementWithId(ypp, StatementType.GROUPING, null, "gr-05");
       ypp.next();

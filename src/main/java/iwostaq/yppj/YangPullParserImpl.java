@@ -2,16 +2,14 @@ package iwostaq.yppj;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Stack;
-
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenFactory;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.UnbufferedCharStream;
-
 import iwostaq.yppj.exception.YangPullParserException;
 import iwostaq.yppj.g.YangLexer;
 
@@ -21,148 +19,106 @@ import iwostaq.yppj.g.YangLexer;
  */
 public class YangPullParserImpl implements YangPullParser {
 
-  protected static StatementType[] statementTypes = new StatementType[YangLexer.ruleNames.length];
-  static {
-    Arrays.fill(statementTypes, null);
-    List<String> ruleNameList = Arrays.asList(YangLexer.ruleNames);
+  public static final String VERSION = "1.1.0";
 
-    for (StatementType stType : StatementType.values()) {
-      String ruleName = "KW_" + stType.name().toLowerCase();
-      int index = ruleNameList.indexOf(ruleName);
-      if (0 <= index) {
-        statementTypes[index] = stType;
-      }
-    }
-  }
-
-  protected Reader fromReader;
-
-  protected Stack<Event> eventStack;
-
-  protected Event lastEvent;
-
-  protected Token reservedNextToken;
+  protected static Pattern PATTERN_DATE = Pattern.compile("\\d{4}\\-\\d\\d\\-\\d\\d");
+  protected static Pattern PATTERN_IDTF =
+      Pattern.compile("(?:(?<ns>[A-Za-z_][\\w_\\-\\.]*):)?(?<id>[A-Za-z_][\\w_\\-\\.]*)");
 
   protected CommonTokenStream tokenStream;
+
+  protected ParserContext context;
+  protected YangSyntax syntax;
+
+  protected Event currentEvent;
 
   /**
    * Constructor.
    *
-   * @param fromReader
-   *          the Reader object to read data.
+   * @param fromReader the Reader object to read data.
    */
   public YangPullParserImpl(Reader fromReader) {
     if (fromReader == null) {
       throw new IllegalArgumentException();
     }
-    this.fromReader = fromReader;
 
     CharStream fromCharStream = new UnbufferedCharStream(fromReader);
+
     YangLexer lexer = new YangLexer(fromCharStream);
     lexer.setTokenFactory(new CommonTokenFactory(true));
     this.tokenStream = new CommonTokenStream(lexer);
-    //this.tokenStream.seek(0);
+    // this.tokenStream.seek(0);
 
-    this.eventStack = new Stack<>();
-    this.lastEvent = null;
-    this.reservedNextToken = null;
+    this.context = new ParserContext(this.tokenStream); // by default
+    this.syntax = new YangSyntax();
+    this.currentEvent = null;
   }
 
   /**
-   * Returns next parsing event.
+   * Returns the next parser event.
    * 
-   * @return the next parsing event
-   * @throws IOException 
+   * @return the next parser event
+   * @throws IOException
    * @throws YangPullParserException
    */
   @Override
   public EventType next() throws IOException, YangPullParserException {
-    Token tok = this.getCurrentToken();
-    if (tok.getType() == YangLexer.EOF) {
-      this.lastEvent = Event.END_DEFINITION;
-      return this.lastEvent.getEventType();
+
+    Token token = this.context.getCurrentToken();
+
+    Optional<StatementType> statementType;
+    if (token.getType() == YangLexer.EOF) {
+      this.currentEvent = Event.END_DEFINITION;
+
+      return this.currentEvent.getEventType();
     }
 
-    switch (tok.getType()) {
-    case YangLexer.KW_anyxml:
-    case YangLexer.KW_base:
-    case YangLexer.KW_belongs_to:
-    case YangLexer.KW_bit:
-    case YangLexer.KW_case:
-    case YangLexer.KW_choice:
-    case YangLexer.KW_container:
-    case YangLexer.KW_extension:
-    case YangLexer.KW_feature:
-    case YangLexer.KW_grouping:
-    case YangLexer.KW_identity:
-    case YangLexer.KW_if_feature:
-    case YangLexer.KW_import:
-    case YangLexer.KW_include:
-    case YangLexer.KW_leaf:
-    case YangLexer.KW_leaf_list:
-    case YangLexer.KW_list:
-    case YangLexer.KW_module:
-    case YangLexer.KW_rpc:
-    case YangLexer.KW_submodule:
-    case YangLexer.KW_type:
-    case YangLexer.KW_typedef:
-    case YangLexer.KW_uses:
-      this.startStatement(tok.getType());
-      break;
-    case YangLexer.KW_argument:
-    case YangLexer.KW_augment:
-    case YangLexer.KW_config:
-    case YangLexer.KW_contact:
-    case YangLexer.KW_default:
-    case YangLexer.KW_description:
-    case YangLexer.KW_enum:
-    case YangLexer.KW_error_app_tag:
-    case YangLexer.KW_error_message:
-    case YangLexer.KW_fraction_digits:
-    case YangLexer.KW_key:
-    case YangLexer.KW_length:
-    case YangLexer.KW_mandatory:
-    case YangLexer.KW_max_elements:
-    case YangLexer.KW_min_elements:
-    case YangLexer.KW_must:
-    case YangLexer.KW_namespace:
-    case YangLexer.KW_ordered_by:
-    case YangLexer.KW_organization:
-    case YangLexer.KW_path:
-    case YangLexer.KW_pattern:
-    case YangLexer.KW_position:
-    case YangLexer.KW_prefix:
-    case YangLexer.KW_presence:
-    case YangLexer.KW_range:
-    case YangLexer.KW_reference:
-    case YangLexer.KW_refine:
-    case YangLexer.KW_require_instance:
-    case YangLexer.KW_revision:
-    case YangLexer.KW_revision_date:
-    case YangLexer.KW_status:
-    case YangLexer.KW_unique:
-    case YangLexer.KW_units:
-    case YangLexer.KW_value:
-    case YangLexer.KW_when:
-    case YangLexer.KW_yang_version:
-    case YangLexer.KW_yin_element:
-      this.startStatementWithArg(tok.getType());
-      break;
-    case YangLexer.S_RBR:
-    case YangLexer.S_SEMICOLON:
-      this.endStatement();
-      break;
-    case YangLexer.IDENTIFIER:
-      this.startUnknownStatement();
-      break;
-    case YangLexer.KW_input:
-    case YangLexer.KW_output:
-      this.startStatementWithoutIdNorArg(tok.getType());
-      break;
-    default:
-      throw new YangPullParserException("err.unknown_token", tok.getText());
+    if (this.syntax.isEndStatement(token)) {
+      this.currentEvent = this.endStatement();
+      return this.currentEvent.getEventType();
     }
-    return this.lastEvent.getEventType();
+
+    statementType = this.syntax.searchStatementsExpectingIdFor(token);
+    if (statementType.isPresent()) {
+      Event startEventExpectingId = this.createStartStatementEvent(statementType.get(), token);
+      this.readIdentifier(startEventExpectingId);
+      this.closeStartStatement(startEventExpectingId);
+      this.currentEvent = startEventExpectingId;
+      return this.currentEvent.getEventType();
+    }
+
+    statementType = this.syntax.searchStatementsExpectingArgumentsFor(token);
+    if (statementType.isPresent()) {
+      Event startEventExpectingArgument =
+          this.createStartStatementEvent(statementType.get(), token);
+      String argumentString = this.readString();
+      if (argumentString == null) {
+        throw new YangPullParserException();
+      }
+      startEventExpectingArgument.setArgument(argumentString);
+      this.closeStartStatement(startEventExpectingArgument);
+      this.currentEvent = startEventExpectingArgument;
+      return this.currentEvent.getEventType();
+
+    }
+
+    statementType = this.syntax.searchStatementsExpectingNoArgFor(token);
+    if (statementType.isPresent()) {
+      Event startEventExpectingNoArg = this.createStartStatementEvent(statementType.get(), token);
+      this.closeStartStatement(startEventExpectingNoArg);
+      this.currentEvent = startEventExpectingNoArg;
+      return this.currentEvent.getEventType();
+    }
+
+    if (this.syntax.isUnknownStatement(token)) {
+      Event startUnknownEvent = new Event(EventType.STATEMENT_START, StatementType.UNKNOWN);
+      this.procUnknownStatement(startUnknownEvent);
+      this.closeStartStatement(startUnknownEvent);
+      this.currentEvent = startUnknownEvent;
+      return this.currentEvent.getEventType();
+    }
+
+    throw new YangPullParserException("unknown token:" + token.getText());
   }
 
   /**
@@ -172,7 +128,7 @@ public class YangPullParserImpl implements YangPullParser {
    */
   @Override
   public int getDepth() {
-    return this.eventStack.size();
+    return this.context.getEventStackSize();
   }
 
   /**
@@ -182,10 +138,10 @@ public class YangPullParserImpl implements YangPullParser {
    */
   @Override
   public EventType getEventType() {
-    if (this.lastEvent == null) {
+    if (this.currentEvent == null) {
       return null;
     } else {
-      return this.lastEvent.getEventType();
+      return this.currentEvent.getEventType();
     }
   }
 
@@ -196,10 +152,10 @@ public class YangPullParserImpl implements YangPullParser {
    */
   @Override
   public StatementType getStatementType() {
-    if (this.lastEvent == null) {
+    if (this.currentEvent == null) {
       return null;
     } else {
-      return this.lastEvent.getStatementType();
+      return this.currentEvent.getStatementType();
     }
   }
 
@@ -209,10 +165,10 @@ public class YangPullParserImpl implements YangPullParser {
    * @return the namespace of the current statement
    */
   public String getNamespace() {
-    if (this.lastEvent == null) {
+    if (this.currentEvent == null) {
       return null;
     } else {
-      return this.lastEvent.getNamespace();
+      return this.currentEvent.getNamespace();
     }
   }
 
@@ -223,10 +179,10 @@ public class YangPullParserImpl implements YangPullParser {
    */
   @Override
   public String getIdentifier() {
-    if (this.lastEvent == null) {
+    if (this.currentEvent == null) {
       return null;
     } else {
-      return this.lastEvent.getIdentifier();
+      return this.currentEvent.getIdentifier();
     }
   }
 
@@ -237,196 +193,146 @@ public class YangPullParserImpl implements YangPullParser {
    */
   @Override
   public String getArgument() {
-    if (this.lastEvent == null) {
+    if (this.currentEvent == null) {
       return null;
     } else {
-      return this.lastEvent.getArgument();
+      return this.currentEvent.getArgument();
     }
   }
 
   /**
-   * Returns the current lexical token.
-   * 
-   * @return the current lexical token.
+   * Create the start event from the given token.
+   *
+   * @param statemntType the statement type
+   * @param token the token given
+   * @return the start event created from the token parameter.
    */
-  protected Token getCurrentToken() {
-    return this.tokenStream.LT(1);
+  protected Event createStartStatementEvent(StatementType statementType, Token token) {
+    assert (statementType != null);
+    assert (token != null);
+
+    Event startEvent = new Event(EventType.STATEMENT_START, statementType);
+    this.context.consume();
+
+    return startEvent;
   }
 
-  /**
-   * Consumes the current lexical token and prepares the next token in the
-   * stream.
-   */
-  protected void consume() {
-    this.tokenStream.consume();
-  }
+  protected void closeStartStatement(Event event) throws YangPullParserException {
+    this.context.pushEvent(event);
 
-  protected void startStatement(int ruleNameIndex) throws YangPullParserException {
-    assert(0 < ruleNameIndex && ruleNameIndex <= YangLexer.ruleNames.length);
-    
-    Event event = this.createStartStatementEvent(ruleNameIndex);
-    this.consume();
-
-    this.readIdentifier(event);
-
-    Token nextToken = this.getCurrentToken();
+    Token nextToken = this.context.getCurrentToken();
     switch (nextToken.getType()) {
-    case YangLexer.S_LBR:
-      this.consume();
-      break;
-    case YangLexer.S_SEMICOLON:
-      break;
-    default:
-      throw new YangPullParserException("err.unexpected_token", nextToken.getText());
+      case YangLexer.S_LBR:
+        this.context.consume();
+        break;
+      case YangLexer.S_SEMICOLON:
+        break;
+      default:
+        throw new YangPullParserException("err.unexpected_token", nextToken.getText());
     }
-
-    this.eventStack.push(event);
-    this.lastEvent = event;
   }
 
-  protected void startStatementWithArg(int ruleNameIndex) throws YangPullParserException {
-    assert(0 < ruleNameIndex && ruleNameIndex <= YangLexer.ruleNames.length);
-
-    Event event = this.createStartStatementEvent(ruleNameIndex);
-    this.consume();
-
-    event.setArgument(this.readArgument());
-
-    Token nextToken = this.getCurrentToken();
-    switch (nextToken.getType()) {
-    case YangLexer.S_LBR:
-      this.consume();
-      break;
-    case YangLexer.S_SEMICOLON:
-      break;
-    default:
-      throw new YangPullParserException("err.unexpected_token", nextToken.getText());
-
-    }
-
-    this.eventStack.push(event);
-    this.lastEvent = event;
-  }
-
-  protected void startStatementWithoutIdNorArg(int ruleNameIndex) throws YangPullParserException {
-    assert(0 < ruleNameIndex && ruleNameIndex <= YangLexer.ruleNames.length);
-
-    Event event = this.createStartStatementEvent(ruleNameIndex);
-    this.consume();
-
-    Token nextToken = this.getCurrentToken();
-    switch (nextToken.getType()) {
-    case YangLexer.S_LBR:
-      this.consume();
-      break;
-    case YangLexer.S_SEMICOLON:
-      break;
-    default:
-      throw new YangPullParserException("err.unexpected_token", nextToken.getText());
-    }
-
-    this.eventStack.push(event);
-    this.lastEvent = event;
-  }
-
-  protected void startUnknownStatement() throws YangPullParserException {
-    Event event = new Event(EventType.STATEMENT_START, StatementType.UNKNOWN);
-
-    this.readIdentifier(event);
-
-    Token nextToken = this.getCurrentToken();
-    if (nextToken.getType() == YangLexer.IDENTIFIER || nextToken.getType() == YangLexer.STRING) {
-      event.setArgument(this.readArgument());
-      nextToken = this.getCurrentToken();
-    }
-
-    switch (nextToken.getType()) {
-    case YangLexer.S_LBR:
-      this.consume();
-      break;
-    case YangLexer.S_SEMICOLON:
-      break;
-    default:
-      throw new YangPullParserException("err.unexpected_token", nextToken.getText());
-    }
-    this.eventStack.push(event);
-    this.lastEvent = event;
-  }
-
-  protected void endStatement() throws YangPullParserException {
-    if (this.eventStack.isEmpty()) {
+  protected Event endStatement() throws YangPullParserException {
+    Event startEvent = this.context.popTopEvent();
+    if (startEvent == null) {
       throw new YangPullParserException();
     }
 
-    Event startEvent = this.eventStack.pop();
     Event endEvent = new Event(EventType.STATEMENT_END, startEvent.getStatementType());
     endEvent.setNamespace(startEvent.getNamespace());
     endEvent.setIdentifier(startEvent.getIdentifier());
     endEvent.setArgument(startEvent.getArgument());
 
-    this.lastEvent = endEvent;
-    this.consume();
+    this.context.consume();
+
+    return endEvent;
   }
 
-  protected Event createStartStatementEvent(int ruleNameIndex) throws YangPullParserException {
-    assert(0 < ruleNameIndex && ruleNameIndex <= YangLexer.ruleNames.length);
-
-    StatementType statementType = YangPullParserImpl.statementTypes[ruleNameIndex - 1];
-    if (statementType == null) {
-      throw new YangPullParserException();
+  protected void procUnknownStatement(Event event)
+      throws YangPullParserException {
+    Token token = this.context.getCurrentToken();
+    this.context.consume();
+  
+    Matcher m = YangPullParserImpl.PATTERN_IDTF.matcher(token.getText());
+    if (!m.find()) {
+      throw new YangPullParserException("err.unexpected_token", token.getText());
     }
-    return new Event(EventType.STATEMENT_START, statementType);
+  
+    event.setNamespace(m.group("ns"));
+    event.setIdentifier(m.group("id"));
+ 
+    Token nextToken = this.context.getCurrentToken();
+    if (nextToken.getType() == YangLexer.S_SEMICOLON) {
+      return;
+    }
+    
+    String arg = this.readString();
+    if (arg != null) {
+      event.setArgument(arg);
+    }
   }
 
   protected void readIdentifier(Event event) throws YangPullParserException {
-    assert(event != null);
+    assert (context != null);
+    assert (event != null);
+    assert (event.getEventType() == EventType.STATEMENT_START);
 
-    Token idOrNsToken = this.getCurrentToken();
-
-    // FIXME This function does not check if the type of the token is really IDENTIFIER or STRING
-    // because I saw a model using a keyword as an identifier without quotes.
-
-    this.consume();
-    Token nextToken = this.getCurrentToken();
-    if (nextToken.getType() == YangLexer.S_COLON) {
-      this.consume();
-      Token idToken = this.getCurrentToken();
-      if (idToken.getType() != YangLexer.IDENTIFIER) {
-        throw new YangPullParserException();
-      }
-      event.setNamespace(idOrNsToken.getText());
-      event.setIdentifier(idToken.getText());
-      this.consume();
-    } else {
-      event.setNamespace(null);
-      event.setIdentifier(idOrNsToken.getText());
+    String prefixOrIdtring = this.readString();
+    if (prefixOrIdtring == null) {
+      throw new YangPullParserException();
     }
+
+    Matcher m = PATTERN_IDTF.matcher(prefixOrIdtring);
+    if (!m.find()) {
+      throw new YangPullParserException();
+    }
+
+    event.setNamespace(m.group("ns"));
+    event.setIdentifier(m.group("id"));
   }
 
-  protected String readArgument() throws YangPullParserException {
-    Token strToken = this.getCurrentToken();
-    this.consume();
+  protected String readDateString() throws YangPullParserException {
+    String dateString = this.readString();
+    if (dateString == null) {
+      throw new YangPullParserException();
+    }
 
-    StringBuilder sb = new StringBuilder(strToken.getText());
-    out: while (true) {
-      Token nextToken = this.getCurrentToken();
-      switch (nextToken.getType()) {
-      case YangLexer.S_PLUS:
-        this.consume();
-        Token nextStringToken = this.getCurrentToken();
-        if (nextStringToken.getType() != YangLexer.STRING) {
-          throw new YangPullParserException("err.unexpected_token", nextToken.getText());
-        }
-        sb.append(nextStringToken.getText());
-        this.consume();
+    Matcher m = PATTERN_DATE.matcher(dateString);
+    if (!m.matches()) {
+      throw new YangPullParserException();
+    }
+    return dateString;
+  }
+
+  protected String readString() throws YangPullParserException {
+
+    Token stringToken = this.context.getCurrentToken();
+    if (stringToken.getType() == YangLexer.UNQUOTED_STRING) {
+      this.context.consume();
+      return stringToken.getText();
+    }
+
+    if (stringToken.getType() != YangLexer.QUOTED_STRING) {
+      throw new YangPullParserException("err.unexpected_token", stringToken.getText());
+    }
+
+    StringBuilder sb = new StringBuilder();
+    sb.append(stringToken.getText());
+    this.context.consume();
+
+    while (true) {
+      Token nextToken = this.context.getCurrentToken();
+      if (nextToken.getType() != YangLexer.S_PLUS) {
         break;
-      case YangLexer.S_LBR:
-        break out;
-      case YangLexer.S_SEMICOLON:
-        break out;
-      default:
-        throw new YangPullParserException("err.unexpected_token", nextToken.getText());
       }
+      this.context.consume();
+
+      stringToken = this.context.getCurrentToken();
+      if (stringToken.getType() != YangLexer.QUOTED_STRING) {
+        throw new YangPullParserException("err.unexpected_token", stringToken.getText());
+      }
+      sb.append(stringToken.getText());
+      this.context.consume();
     }
 
     return sb.toString();

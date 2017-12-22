@@ -1,11 +1,8 @@
 package iwostaq.yppj;
 
 import static org.junit.Assert.*;
-
 import java.io.FileReader;
-
 import org.junit.Test;
-
 import iwostaq.yppj.YangPullParser.StatementType;
 
 public class YppTest03DataDef {
@@ -14,10 +11,10 @@ public class YppTest03DataDef {
   public void parseLeaf() {
     try (FileReader fromFile = Util.getFileReader("testmodule-03leaf.yang")) {
       YangPullParser ypp = new YangPullParserImpl(fromFile);
-      
+
       ypp.next();
       Util.assertStartStatementWithId(ypp, StatementType.MODULE, null, "testmodule-03leaf");
-      
+
       ypp.next();
       Util.assertStartStatementWithStringArg(ypp, StatementType.NAMESPACE, "urn:ns-03leaf");
       ypp.next();

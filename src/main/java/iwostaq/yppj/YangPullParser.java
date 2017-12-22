@@ -1,7 +1,6 @@
 package iwostaq.yppj;
 
 import java.io.IOException;
-
 import iwostaq.yppj.exception.YangPullParserException;
 
 /**
@@ -14,82 +13,85 @@ public interface YangPullParser {
     /** At the end of the module. */
     END_MODULE,
     /** At the start of a statement. */
-    STATEMENT_START, // 
+    STATEMENT_START, //
     /** At the end of a statement. */
     STATEMENT_END,
   }
 
   public enum StatementType {
-    ANYXML,
-    ARGUMENT,
-    AUGMENT,
-    BASE,
-    BELONGS_TO,
-    BIT,
-    CASE,
-    CHOICE,
-    CONFIG,
-    CONTACT,
-    CONTAINER,
-    DEFAULT,
-    DESCRIPTION,
-    DEVIATION,
-    ENUM,
-    ERROR_APP_TAG,
-    ERROR_MESSAGE,
-    EXTENSION,
-    FEATURE,
-    FRACTION_DIGITS,
-    GROUPING,
-    IDENTITY,
-    IF_FEATURE,
-    IMPORT,
-    INCLUDE,
-    INPUT,
-    KEY,
-    LEAF,
-    LEAF_LIST,
-    LENGTH,
-    LIST,
-    MANDATORY,
-    MAX_ELEMENTS,
-    MIN_ELEMENTS,
-    MODULE,
-    MUST,
-    NAMESPACE,
-    NOTIFICATION,
-    ORDERED_BY,
-    ORGANIZATION,
-    OUTPUT,
-    PATH,
-    PATTERN,
-    POSITION,
-    PREFIX,
-    PRESENCE,
-    RANGE,
-    REFERENCE,
-    REFINE,
-    REQUIRE_INSTANCE,
-    REVISION,
-    REVISION_DATE,
-    RPC,
-    STATUS,
-    SUBMODULE,
-    TYPE,
-    TYPEDEF,
-    UNIQUE,
-    UNITS,
-    UNKNOWN,
-    USES,
-    VALUE,
-    WHEN,
-    YANG_VERSION,
+    ACTION, //
+    ANYDATA, // FORMATTER BLOCKER
+    ANYXML, //
+    ARGUMENT, //
+    AUGMENT, //
+    BASE, //
+    BELONGS_TO, //
+    BIT, //
+    CASE, //
+    CHOICE, //
+    CONFIG, //
+    CONTACT, //
+    CONTAINER, //
+    DEFAULT, //
+    DESCRIPTION, //
+    DEVIATION, //
+    ENUM, //
+    ERROR_APP_TAG, //
+    ERROR_MESSAGE, //
+    EXTENSION, //
+    FEATURE, //
+    FRACTION_DIGITS, //
+    GROUPING, //
+    IDENTITY, //
+    IF_FEATURE, //
+    IMPORT, //
+    INCLUDE, //
+    INPUT, //
+    INVERT_MATCH, //
+    KEY, //
+    LEAF, //
+    LEAF_LIST, //
+    LENGTH, //
+    LIST, //
+    MANDATORY, //
+    MAX_ELEMENTS, //
+    MIN_ELEMENTS, //
+    MODIFIER, //
+    MODULE, //
+    MUST, //
+    NAMESPACE, //
+    NOTIFICATION, //
+    ORDERED_BY, //
+    ORGANIZATION, //
+    OUTPUT, //
+    PATH, //
+    PATTERN, //
+    POSITION, //
+    PREFIX, //
+    PRESENCE, //
+    RANGE, //
+    REFERENCE, //
+    REFINE, //
+    REQUIRE_INSTANCE, //
+    REVISION, //
+    REVISION_DATE, //
+    RPC, //
+    STATUS, //
+    SUBMODULE, //
+    TYPE, //
+    TYPEDEF, //
+    UNIQUE, //
+    UNITS, //
+    UNKNOWN, //
+    USES, //
+    VALUE, //
+    WHEN, //
+    YANG_VERSION, //
     YIN_ELEMENT,
-    ;
   }
 
   /**
-   * Returns next parsing event.
+   * Return next parser event.
    *
    * @return the next parsing event
    * @throws IOException
@@ -98,7 +100,7 @@ public interface YangPullParser {
   public EventType next() throws IOException, YangPullParserException;
 
   /**
-   * Returns the depth of the current statement from the root module statement.
+   * Return the depth of the current position in the module.
    * 
    * @return the depth of the current statement
    */
@@ -112,7 +114,7 @@ public interface YangPullParser {
   public EventType getEventType();
 
   /**
-   * Return the name of the statement.
+   * Return the name of the current statement.
    * 
    * @return the name of the current statement
    */

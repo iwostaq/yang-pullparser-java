@@ -24,10 +24,8 @@ public final class Event {
   /**
    * Constructor.
    * 
-   * @param eventType
-   *          the type of the event
-   * @param statement
-   *          the statement
+   * @param eventType the type of the event
+   * @param statement the statement
    */
   public Event(EventType eventType, StatementType statementType) {
     if (eventType == null) {
@@ -51,8 +49,7 @@ public final class Event {
   /**
    * Sets the type of the event to the object.
    * 
-   * @param eventType
-   *          the type of the event to be set
+   * @param eventType the type of the event to be set
    */
   public void setEventType(EventType eventType) {
     this.eventType = eventType;
@@ -70,8 +67,7 @@ public final class Event {
   /**
    * Sets the type of the statement to the object.
    * 
-   * @param statementType
-   *          the type of the statement
+   * @param statementType the type of the statement
    */
   public void setStatementType(StatementType statementType) {
     this.statementType = statementType;
@@ -89,8 +85,7 @@ public final class Event {
   /**
    * Sets the namespace to the object.
    * 
-   * @param namespace
-   *          the namespace to be set.
+   * @param namespace the namespace to be set.
    */
   public void setNamespace(String namespace) {
     this.namespace = namespace;
@@ -108,8 +103,7 @@ public final class Event {
   /**
    * Sets the identifier to the object.
    * 
-   * @param identifier
-   *          the identifier to be set
+   * @param identifier the identifier to be set
    */
   public void setIdentifier(String identifier) {
     this.identifier = identifier;
@@ -127,8 +121,7 @@ public final class Event {
   /**
    * Sets the argument to the object.
    * 
-   * @param argument
-   *          the argument to be set
+   * @param argument the argument to be set
    */
   public void setArgument(String argument) {
     this.argument = argument;
@@ -142,10 +135,11 @@ public final class Event {
   @Override
   public String toString() {
     if (this.namespace == null) {
-      return String.format("[%s:%s]%s", this.eventType.name(), this.statementType.name(), this.identifier);
+      return String.format("[%s:%s]%s", this.eventType.name(), this.statementType.name(),
+          this.identifier);
     } else {
-      return String.format("[%s:%s]%s:%s", this.eventType.name(), this.statementType.name(), this.namespace,
-          identifier);
+      return String.format("[%s:%s]%s:%s", this.eventType.name(), this.statementType.name(),
+          this.namespace, identifier);
     }
   }
 }

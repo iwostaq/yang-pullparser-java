@@ -1,12 +1,9 @@
 package iwostaq.yppj;
 
 import static org.junit.Assert.*;
-
 import java.io.FileReader;
 import java.io.StringReader;
-
 import org.junit.Test;
-
 import iwostaq.yppj.YangPullParser.EventType;
 import iwostaq.yppj.YangPullParser.StatementType;
 
@@ -69,16 +66,20 @@ public class YppTest00Statement {
       Util.assertStartStatementWithStringArg(ypp, StatementType.PREFIX, "pre-01");
       ypp.next();
       Util.assertEndStatementWithStringArg(ypp, StatementType.PREFIX, "pre-01");
-      
-      ypp.next();
-      Util.assertStartStatementWithStringArg(ypp, StatementType.ORGANIZATION, "This string contains /* and */.");
-      ypp.next();
-      Util.assertEndStatementWithStringArg(ypp, StatementType.ORGANIZATION, "This string contains /* and */.");
 
       ypp.next();
-      Util.assertStartStatementWithStringArg(ypp, StatementType.DESCRIPTION, "// This string starts and ends with //.");
+      Util.assertStartStatementWithStringArg(ypp, StatementType.ORGANIZATION,
+          "This string contains /* and */.");
       ypp.next();
-      Util.assertEndStatementWithStringArg(ypp, StatementType.DESCRIPTION, "// This string starts and ends with //.");
+      Util.assertEndStatementWithStringArg(ypp, StatementType.ORGANIZATION,
+          "This string contains /* and */.");
+
+      ypp.next();
+      Util.assertStartStatementWithStringArg(ypp, StatementType.DESCRIPTION,
+          "// This string starts and ends with //.");
+      ypp.next();
+      Util.assertEndStatementWithStringArg(ypp, StatementType.DESCRIPTION,
+          "// This string starts and ends with //.");
 
       ypp.next();
       Util.assertEndStatementWithId(ypp, StatementType.MODULE, null, "testmodule-00comment");
@@ -123,6 +124,73 @@ public class YppTest00Statement {
     }
   }
 
+  @Test
+  public void ComplecatedSpecificationsForString() {
+    try (FileReader fromFile = Util.getFileReader("testmodule-00string.yang")) {
+      YangPullParser ypp = new YangPullParserImpl(fromFile);
+
+      ypp.next();
+      Util.assertStartStatementWithId(ypp, StatementType.MODULE, null, "testmodule-00string");
+      ypp.next();
+      Util.assertStartStatementWithStringArg(ypp, StatementType.NAMESPACE, "urn:ns-00string");
+      ypp.next();
+      Util.assertEndStatementWithStringArg(ypp, StatementType.NAMESPACE, "urn:ns-00string");
+      ypp.next();
+      Util.assertStartStatementWithStringArg(ypp, StatementType.PREFIX, "pre-01");
+      ypp.next();
+      Util.assertEndStatementWithStringArg(ypp, StatementType.PREFIX, "pre-01");
+
+      ypp.next();
+      Util.assertStartStatementWithStringArg(ypp, StatementType.REVISION, "2017-01-01");
+      ypp.next();
+      Util.assertStartStatementWithStringArg(ypp, StatementType.DESCRIPTION,
+          "a string seperated by a plus.");
+      ypp.next();
+      Util.assertEndStatementWithStringArg(ypp, StatementType.DESCRIPTION,
+          "a string seperated by a plus.");
+      ypp.next();
+      Util.assertEndStatementWithStringArg(ypp, StatementType.REVISION, "2017-01-01");
+
+      ypp.next();
+      Util.assertStartStatementWithStringArg(ypp, StatementType.REVISION, "2017-01-02");
+      ypp.next();
+      Util.assertStartStatementWithStringArg(ypp, StatementType.DESCRIPTION,
+          "unquoted-string-should-be-ok");
+      ypp.next();
+      Util.assertEndStatementWithStringArg(ypp, StatementType.DESCRIPTION,
+          "unquoted-string-should-be-ok");
+      ypp.next();
+      Util.assertEndStatementWithStringArg(ypp, StatementType.REVISION, "2017-01-02");
+
+      ypp.next();
+      Util.assertStartStatementWithStringArg(ypp, StatementType.REVISION, "2017-01-03");
+      ypp.next();
+      Util.assertStartStatementWithStringArg(ypp, StatementType.DESCRIPTION,
+          "backslash \\n is a meta character to escape 4 chars");
+      ypp.next();
+      Util.assertEndStatementWithStringArg(ypp, StatementType.DESCRIPTION,
+          "backslash \\n is a meta character to escape 4 chars");
+      ypp.next();
+      Util.assertEndStatementWithStringArg(ypp, StatementType.REVISION, "2017-01-03");
+
+      ypp.next();
+      Util.assertStartStatementWithStringArg(ypp, StatementType.REVISION, "2017-01-04");
+      ypp.next();
+      Util.assertStartStatementWithStringArg(ypp, StatementType.DESCRIPTION,
+          "[0-9]+(d|days|h|hours|hr|m|min|minutes|s|sec|seconds|w|weeks|wk|y|years|yr){0,1}");
+      ypp.next();
+      Util.assertEndStatementWithStringArg(ypp, StatementType.DESCRIPTION,
+          "[0-9]+(d|days|h|hours|hr|m|min|minutes|s|sec|seconds|w|weeks|wk|y|years|yr){0,1}");
+      ypp.next();
+      Util.assertEndStatementWithStringArg(ypp, StatementType.REVISION, "2017-01-04");
+
+
+    } catch (Exception e) {
+      e.printStackTrace();
+      fail();
+    }
+  }
+
   // Test cases under below are unfinished yet.
 
   @Test
@@ -132,7 +200,6 @@ public class YppTest00Statement {
 
       ypp.next();
       Util.assertStartStatementWithId(ypp, StatementType.MODULE, null, "testmodule-00unknown");
-
       ypp.next();
       Util.assertStartStatementWithStringArg(ypp, StatementType.NAMESPACE, "urn:ns-00unknown");
       ypp.next();
@@ -182,9 +249,7 @@ public class YppTest00Statement {
 
   @Test
   public void testReadIdentifier() {
-    YangPullParser ypp = new YangPullParserImpl(new StringReader(" module mymodule {"
-        + ""
-        + "}"));
+    YangPullParser ypp = new YangPullParserImpl(new StringReader(" module mymodule {" + "" + "}"));
     try {
       ypp.next();
       Util.assertStartStatementWithId(ypp, StatementType.MODULE, null, "mymodule");

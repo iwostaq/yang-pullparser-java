@@ -1,17 +1,14 @@
 package iwostaq.yppj;
 
 import static org.junit.Assert.*;
-
 import java.io.StringReader;
-
 import org.junit.Test;
-
 import iwostaq.yppj.exception.YangPullParserException;
 
 public class YppTest99Error {
 
   @Test
-  public void stringIsConcatenatedWithAPlus() {
+  public void stringsAreConcatenatedWithAPlus() {
     try {
       YangPullParser ypp = new YangPullParserImpl(new StringReader("organization \"abc\" + {"));
 
@@ -19,7 +16,7 @@ public class YppTest99Error {
       fail();
     } catch (Exception e) {
       assertEquals(YangPullParserException.class, e.getClass());
-      assertEquals("unexpected token: +", e.getMessage());
+      assertEquals("unexpected token: {", e.getMessage());
     }
   }
 
@@ -32,8 +29,7 @@ public class YppTest99Error {
       fail();
     } catch (Exception e) {
       assertEquals(YangPullParserException.class, e.getClass());
-      assertEquals("unexpected token: }", e.getMessage());
+      assertEquals("unexpected token: {", e.getMessage());
     }
   }
 }
-
