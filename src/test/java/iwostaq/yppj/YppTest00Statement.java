@@ -166,10 +166,10 @@ public class YppTest00Statement {
       Util.assertStartStatementWithStringArg(ypp, StatementType.REVISION, "2017-01-03");
       ypp.next();
       Util.assertStartStatementWithStringArg(ypp, StatementType.DESCRIPTION,
-          "backslash \\n is a meta character to escape 4 chars");
+          "a new line character can be represented with\n    a backslash (\\\\)  + 'n' (i.e. \\\\n).");
       ypp.next();
       Util.assertEndStatementWithStringArg(ypp, StatementType.DESCRIPTION,
-          "backslash \\n is a meta character to escape 4 chars");
+          "a new line character can be represented with\n    a backslash (\\\\)  + 'n' (i.e. \\\\n).");
       ypp.next();
       Util.assertEndStatementWithStringArg(ypp, StatementType.REVISION, "2017-01-03");
 
@@ -194,7 +194,7 @@ public class YppTest00Statement {
   // Test cases under below are unfinished yet.
 
   @Test
-  public void parseUnknownStatements() {
+  public void ParseUnknownStatements() {
     try (FileReader fromFile = Util.getFileReader("testmodule-00unknown.yang")) {
       YangPullParser ypp = new YangPullParserImpl(fromFile);
 
@@ -276,7 +276,7 @@ public class YppTest00Statement {
       assertEquals("pre-02", ypp.getNamespace());
       assertEquals("ext-04", ypp.getIdentifier());
       assertEquals("info-02", ypp.getArgument());
-      
+
       ypp.next();
       Util.assertEndStatementWithId(ypp, StatementType.MODULE, null, "testmodule-00unknown");
     } catch (Exception e) {

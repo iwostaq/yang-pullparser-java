@@ -11,7 +11,8 @@ module testmodule-00string {
   }
 
   revision 2017-01-03 {
-    description "backslash \n is a meta character to escape 4 chars";
+    description "a new line character can be represented with
+    a backslash (\\)  + 'n' (i.e. \\n).";
   }
 
   revision 2017-01-04 {

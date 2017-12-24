@@ -78,12 +78,12 @@ mode SQUOTED_STRING;
 
 SQSTR
 :
-  ~( '\'' )+ -> type (QUOTED_STRING)
+  ~( '\'' )+ -> type ( QUOTED_STRING )
 ;
 
 SQUOT
 :
-  '\'' -> skip, popMode
+  '\'' -> skip , popMode
 ;
 
 mode DQUOTED_STRING;
@@ -95,28 +95,8 @@ DQSTR
     | ESC_NEWLINE
     | ESC_TAB
     | ESC_DQUOT
+    | ESC_BS
   )+ -> type ( QUOTED_STRING )
-;
-
-YANG_CHAR
-:
-  '\u0009'
-  | '\u000A'
-  | '\u000D'
-  | '\u0020' .. '\u0021' // excludes a double quotation (=0x22)
-
-  | '\u0023' .. '\u005B' // excludes a back-slash (=0x5c)
-
-  | '\u005D' .. '\uD7FF'
-  | '\uE000' .. '\uFDCF'
-  | '\uFDF0' .. '\uFFFD'
-;
-
-YANG_CHAR10
-:
-  '\uD800' .. '\uDFFF'
-  | '\uFDD0' .. '\uFDEF'
-  | '\uFFFE' .. '\uFFFF'
 ;
 
 ESC_NEWLINE
@@ -141,9 +121,39 @@ ESC_DQUOT
 :
   '\\"'
   {
-    setText("\\\"");
+    setText("\"");
   }
 
+;
+
+ESC_BS
+:
+  '\\\\'
+  {
+    setText("\\");
+  }
+
+;
+
+YANG_CHAR
+:
+  '\u0009'
+  | '\u000A'
+  | '\u000D'
+  | '\u0020' .. '\u0021' // excludes a double quotation (=0x22)
+
+  | '\u0023' .. '\u005B' // excludes a back-slash (=0x5c)
+
+  | '\u005D' .. '\uD7FF'
+  | '\uE000' .. '\uFDCF'
+  | '\uFDF0' .. '\uFFFD'
+;
+
+YANG_CHAR10
+:
+  '\uD800' .. '\uDFFF'
+  | '\uFDD0' .. '\uFDEF'
+  | '\uFFFE' .. '\uFFFF'
 ;
 
 DQUOT
