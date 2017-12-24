@@ -313,7 +313,7 @@ public class YangPullParserImpl implements YangPullParser {
 
     while (true) {
       Token nextToken = this.context.getCurrentToken();
-      if (nextToken.getType() != YangLexer.S_PLUS) {
+      if (nextToken.getType() != YangLexer.UNQUOTED_STRING || !("+".equals(nextToken.getText()))) {
         break;
       }
       this.context.consume();

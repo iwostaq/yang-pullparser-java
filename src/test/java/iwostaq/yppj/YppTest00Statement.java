@@ -166,10 +166,10 @@ public class YppTest00Statement {
       Util.assertStartStatementWithStringArg(ypp, StatementType.REVISION, "2017-01-03");
       ypp.next();
       Util.assertStartStatementWithStringArg(ypp, StatementType.DESCRIPTION,
-          "a new line character can be represented with\n    a backslash (\\\\)  + 'n' (i.e. \\\\n).");
+          "a new line character can be represented with\r\n    a backslash (\\\\)  + 'n' (i.e. \\\\n).");
       ypp.next();
       Util.assertEndStatementWithStringArg(ypp, StatementType.DESCRIPTION,
-          "a new line character can be represented with\n    a backslash (\\\\)  + 'n' (i.e. \\\\n).");
+          "a new line character can be represented with\r\n    a backslash (\\\\)  + 'n' (i.e. \\\\n).");
       ypp.next();
       Util.assertEndStatementWithStringArg(ypp, StatementType.REVISION, "2017-01-03");
 

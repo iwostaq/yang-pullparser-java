@@ -42,11 +42,6 @@ S_RBR
   '}'
 ;
 
-S_PLUS
-:
-  '+'
-;
-
 S_DQUOT
 :
   '"' -> skip , pushMode ( DQUOTED_STRING )
