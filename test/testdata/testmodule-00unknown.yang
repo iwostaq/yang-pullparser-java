@@ -10,5 +10,11 @@ module testmodule-00unknown {
     pre-02:ext-03 "info-01"; 
     type string;
   }
+
+  pre-02:ext-04 "info-02" {
+    pre-02:ext-05 {
+      pre-02:ext-06 args;
+    }
+  }
 }
 

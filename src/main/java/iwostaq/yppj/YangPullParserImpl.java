@@ -2,7 +2,6 @@ package iwostaq.yppj;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.antlr.v4.runtime.CharStream;
@@ -66,7 +65,6 @@ public class YangPullParserImpl implements YangPullParser {
 
     Token token = this.context.getCurrentToken();
 
-    Optional<StatementType> statementType;
     if (token.getType() == YangLexer.EOF) {
       this.currentEvent = Event.END_DEFINITION;
 
@@ -74,47 +72,48 @@ public class YangPullParserImpl implements YangPullParser {
     }
 
     if (this.syntax.isEndStatement(token)) {
-      this.currentEvent = this.endStatement();
+      this.currentEvent = this.createEndStatementEvent();
       return this.currentEvent.getEventType();
     }
 
+    StatementType statementType;
+
+    // check if the token is a statement followed by an ID.
     statementType = this.syntax.searchStatementsExpectingIdFor(token);
-    if (statementType.isPresent()) {
-      Event startEventExpectingId = this.createStartStatementEvent(statementType.get(), token);
-      this.readIdentifier(startEventExpectingId);
-      this.closeStartStatement(startEventExpectingId);
-      this.currentEvent = startEventExpectingId;
+    if (statementType != null) {
+      Event event = this.createStartStatementEvent(statementType, token);
+      this.parseIdentifier(event);
+      this.closeStartStatement(event);
+      this.currentEvent = event;
       return this.currentEvent.getEventType();
     }
 
+    // check if the token is a statemnt followed by arguments.
     statementType = this.syntax.searchStatementsExpectingArgumentsFor(token);
-    if (statementType.isPresent()) {
-      Event startEventExpectingArgument =
-          this.createStartStatementEvent(statementType.get(), token);
-      String argumentString = this.readString();
-      if (argumentString == null) {
-        throw new YangPullParserException();
-      }
-      startEventExpectingArgument.setArgument(argumentString);
-      this.closeStartStatement(startEventExpectingArgument);
-      this.currentEvent = startEventExpectingArgument;
+    if (statementType != null) {
+      Event event = this.createStartStatementEvent(statementType, token);
+      event.setArgument(this.readString());
+      this.closeStartStatement(event);
+      this.currentEvent = event;
       return this.currentEvent.getEventType();
 
     }
 
+    // check if the token is a statement followed by none.
     statementType = this.syntax.searchStatementsExpectingNoArgFor(token);
-    if (statementType.isPresent()) {
-      Event startEventExpectingNoArg = this.createStartStatementEvent(statementType.get(), token);
-      this.closeStartStatement(startEventExpectingNoArg);
-      this.currentEvent = startEventExpectingNoArg;
+    if (statementType != null) {
+      Event event = this.createStartStatementEvent(statementType, token);
+      this.closeStartStatement(event);
+      this.currentEvent = event;
       return this.currentEvent.getEventType();
     }
 
+    // check if the token is an unknown statement.
     if (this.syntax.isUnknownStatement(token)) {
-      Event startUnknownEvent = new Event(EventType.STATEMENT_START, StatementType.UNKNOWN);
-      this.procUnknownStatement(startUnknownEvent);
-      this.closeStartStatement(startUnknownEvent);
-      this.currentEvent = startUnknownEvent;
+      Event event = new Event(EventType.STATEMENT_START, StatementType.UNKNOWN);
+      this.parseUnknownStatement(event);
+      this.closeStartStatement(event);
+      this.currentEvent = event;
       return this.currentEvent.getEventType();
     }
 
@@ -201,7 +200,7 @@ public class YangPullParserImpl implements YangPullParser {
   }
 
   /**
-   * Create the start event from the given token.
+   * Create a start event from the given token.
    *
    * @param statemntType the statement type
    * @param token the token given
@@ -215,6 +214,28 @@ public class YangPullParserImpl implements YangPullParser {
     this.context.consume();
 
     return startEvent;
+  }
+
+  /**
+   * Create an end event.
+   * 
+   * @return the created end event
+   * @throws YangPullParserException
+   */
+  protected Event createEndStatementEvent() throws YangPullParserException {
+    Event startEvent = this.context.popTopEvent();
+    if (startEvent == null) {
+      throw new YangPullParserException();
+    }
+
+    Event endEvent = new Event(EventType.STATEMENT_END, startEvent.getStatementType());
+    endEvent.setNamespace(startEvent.getNamespace());
+    endEvent.setIdentifier(startEvent.getIdentifier());
+    endEvent.setArgument(startEvent.getArgument());
+
+    this.context.consume();
+
+    return endEvent;
   }
 
   protected void closeStartStatement(Event event) throws YangPullParserException {
@@ -232,59 +253,27 @@ public class YangPullParserImpl implements YangPullParser {
     }
   }
 
-  protected Event endStatement() throws YangPullParserException {
-    Event startEvent = this.context.popTopEvent();
-    if (startEvent == null) {
-      throw new YangPullParserException();
-    }
+  protected void parseUnknownStatement(Event event) throws YangPullParserException {
+    assert (event != null);
 
-    Event endEvent = new Event(EventType.STATEMENT_END, startEvent.getStatementType());
-    endEvent.setNamespace(startEvent.getNamespace());
-    endEvent.setIdentifier(startEvent.getIdentifier());
-    endEvent.setArgument(startEvent.getArgument());
+    this.parseIdentifier(event);
 
-    this.context.consume();
-
-    return endEvent;
-  }
-
-  protected void procUnknownStatement(Event event)
-      throws YangPullParserException {
-    Token token = this.context.getCurrentToken();
-    this.context.consume();
-  
-    Matcher m = YangPullParserImpl.PATTERN_IDTF.matcher(token.getText());
-    if (!m.find()) {
-      throw new YangPullParserException("err.unexpected_token", token.getText());
-    }
-  
-    event.setNamespace(m.group("ns"));
-    event.setIdentifier(m.group("id"));
- 
     Token nextToken = this.context.getCurrentToken();
-    if (nextToken.getType() == YangLexer.S_SEMICOLON) {
-      return;
-    }
-    
-    String arg = this.readString();
-    if (arg != null) {
-      event.setArgument(arg);
+    if (nextToken.getType() == YangLexer.QUOTED_STRING
+        || nextToken.getType() == YangLexer.UNQUOTED_STRING) {
+      event.setArgument(this.readString());
     }
   }
 
-  protected void readIdentifier(Event event) throws YangPullParserException {
-    assert (context != null);
+  protected void parseIdentifier(Event event) throws YangPullParserException {
     assert (event != null);
     assert (event.getEventType() == EventType.STATEMENT_START);
 
     String prefixOrIdtring = this.readString();
-    if (prefixOrIdtring == null) {
-      throw new YangPullParserException();
-    }
 
     Matcher m = PATTERN_IDTF.matcher(prefixOrIdtring);
     if (!m.find()) {
-      throw new YangPullParserException();
+      throw new YangPullParserException("");
     }
 
     event.setNamespace(m.group("ns"));
@@ -293,19 +282,21 @@ public class YangPullParserImpl implements YangPullParser {
 
   protected String readDateString() throws YangPullParserException {
     String dateString = this.readString();
-    if (dateString == null) {
-      throw new YangPullParserException();
-    }
 
     Matcher m = PATTERN_DATE.matcher(dateString);
     if (!m.matches()) {
-      throw new YangPullParserException();
+      throw new YangPullParserException("err.unexpected_token", dateString);
     }
     return dateString;
   }
 
+  /**
+   * Reads a string from the stream.
+   * 
+   * @return the string
+   * @throws YangPullParserException when meets a token that is not expected.
+   */
   protected String readString() throws YangPullParserException {
-
     Token stringToken = this.context.getCurrentToken();
     if (stringToken.getType() == YangLexer.UNQUOTED_STRING) {
       this.context.consume();

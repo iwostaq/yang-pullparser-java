@@ -2,21 +2,19 @@ package iwostaq.yppj.tool;
 
 import java.io.IOException;
 import java.util.Arrays;
-
 import iwostaq.yppj.exception.YangPullParserException;
 
 public final class AppMain {
 
-  private static final String[] HELP_MESSAGES = new String[] {
-      "usage: java -jar yang-pull-parser-tool.jar <command> [<arg>]",
-      "",
-      "COMMAND:",
-      "",
-      "help",
-      "\tDisplays this messages",
-      "crawl <file path>",
-      "\tcrawls a YANG file given as the argument.",
-  };
+  private static final String[] HELP_MESSAGES =
+      new String[] { //
+          "usage: java -jar yang-pull-parser-tool.jar <command> [<arg>]", //
+          "", //
+          "COMMAND:", //
+          "", //
+          "help", //
+          "\tDisplays this messages", "crawl <file path>", //
+          "\tcrawls a YANG file given as the argument."};
 
   public static void main(String[] args) {
     if (args.length < 1) {
@@ -27,14 +25,14 @@ public final class AppMain {
     try {
       AppFunction func;
       switch (args[0]) {
-      case "crawl":
-        func = new YangCrawler();
-        break;
-      case "lex":
-        func = new SimpleLexer();
-        break;
-      default:
-        func = new AppMain.HelpDisplayer();
+        case "crawl":
+          func = new YangCrawler();
+          break;
+        case "lex":
+          func = new SimpleLexer();
+          break;
+        default:
+          func = new AppMain.HelpDisplayer();
       }
 
       func.setArguments(Arrays.copyOfRange(args, 1, args.length));

@@ -6,7 +6,6 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.util.Stack;
-
 import iwostaq.yppj.YangPullParser;
 import iwostaq.yppj.YangPullParser.EventType;
 import iwostaq.yppj.YangPullParser.StatementType;
@@ -32,14 +31,11 @@ public final class YangCrawler extends AppMain.AppFunction {
   /**
    * Starts the crawling.
    * 
-   * @throws IOException
-   *           raised when problems related to I/O are occurred.
-   * @throws YangPullParserException
-   *           raised when parsing problems are occurred.
+   * @throws IOException raised when problems related to I/O are occurred.
+   * @throws YangPullParserException raised when parsing problems are occurred.
    */
   @Override
-  protected void start()
-      throws IOException, YangPullParserException {
+  protected void start() throws IOException, YangPullParserException {
 
     Reader fromFileReader = null;
     try {
@@ -69,35 +65,35 @@ public final class YangCrawler extends AppMain.AppFunction {
         }
 
         switch (eventType) {
-        case STATEMENT_START:
-          StatementType stmt = ypp.getStatementType();
-          String namespace = ypp.getNamespace();
-          String identifier = ypp.getIdentifier();
-          String argument = ypp.getArgument();
-          String elem = null;
-          if (identifier == null) {
-            elem = String.format("%s(%s)", stmt.name(), argument);
-          } else {
-            if (namespace == null) {
-              elem = String.format("%s[%s]", stmt.name(), identifier);
+          case STATEMENT_START:
+            StatementType stmt = ypp.getStatementType();
+            String namespace = ypp.getNamespace();
+            String identifier = ypp.getIdentifier();
+            String argument = ypp.getArgument();
+            String elem = null;
+            if (identifier == null) {
+              elem = String.format("%s(%s)", stmt.name(), argument);
             } else {
-              elem = String.format("%s[%s:%s]", stmt.name(), namespace, identifier);
+              if (namespace == null) {
+                elem = String.format("%s[%s]", stmt.name(), identifier);
+              } else {
+                elem = String.format("%s[%s:%s]", stmt.name(), namespace, identifier);
+              }
             }
-          }
-          this.stmtStack.push(elem);
+            this.stmtStack.push(elem);
 
-          for (String s : this.stmtStack) {
-            toStream.print('/');
-            toStream.print(s);
-          }
-          toStream.println();
+            for (String s : this.stmtStack) {
+              toStream.print('/');
+              toStream.print(s);
+            }
+            toStream.println();
 
-          break;
-        case STATEMENT_END:
-          this.stmtStack.pop();
-          break;
-        case END_MODULE:
-          throw new YangPullParserException();
+            break;
+          case STATEMENT_END:
+            this.stmtStack.pop();
+            break;
+          case END_MODULE:
+            throw new YangPullParserException();
         }
       }
     } catch (IOException e) {

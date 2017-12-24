@@ -240,6 +240,44 @@ public class YppTest00Statement {
       Util.assertEndStatementWithId(ypp, StatementType.LEAF, null, "l-01");
 
       ypp.next();
+      assertEquals(EventType.STATEMENT_START, ypp.getEventType());
+      assertEquals(StatementType.UNKNOWN, ypp.getStatementType());
+      assertEquals("pre-02", ypp.getNamespace());
+      assertEquals("ext-04", ypp.getIdentifier());
+      assertEquals("info-02", ypp.getArgument());
+      ypp.next();
+      assertEquals(EventType.STATEMENT_START, ypp.getEventType());
+      assertEquals(StatementType.UNKNOWN, ypp.getStatementType());
+      assertEquals("pre-02", ypp.getNamespace());
+      assertEquals("ext-05", ypp.getIdentifier());
+      assertNull(ypp.getArgument());
+      ypp.next();
+      assertEquals(EventType.STATEMENT_START, ypp.getEventType());
+      assertEquals(StatementType.UNKNOWN, ypp.getStatementType());
+      assertEquals("pre-02", ypp.getNamespace());
+      assertEquals("ext-06", ypp.getIdentifier());
+      assertEquals("args", ypp.getArgument());
+      ypp.next();
+      assertEquals(EventType.STATEMENT_END, ypp.getEventType());
+      assertEquals(StatementType.UNKNOWN, ypp.getStatementType());
+      assertEquals("pre-02", ypp.getNamespace());
+      assertEquals("ext-06", ypp.getIdentifier());
+      assertEquals("args", ypp.getArgument());
+      ypp.next();
+      assertEquals(EventType.STATEMENT_END, ypp.getEventType());
+      assertEquals(StatementType.UNKNOWN, ypp.getStatementType());
+      assertEquals("pre-02", ypp.getNamespace());
+      assertEquals("ext-05", ypp.getIdentifier());
+      assertNull(ypp.getArgument());
+
+      ypp.next();
+      assertEquals(EventType.STATEMENT_END, ypp.getEventType());
+      assertEquals(StatementType.UNKNOWN, ypp.getStatementType());
+      assertEquals("pre-02", ypp.getNamespace());
+      assertEquals("ext-04", ypp.getIdentifier());
+      assertEquals("info-02", ypp.getArgument());
+      
+      ypp.next();
       Util.assertEndStatementWithId(ypp, StatementType.MODULE, null, "testmodule-00unknown");
     } catch (Exception e) {
       e.printStackTrace();

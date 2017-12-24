@@ -1,7 +1,6 @@
 package iwostaq.yppj;
 
 import java.util.Arrays;
-import java.util.Optional;
 import org.antlr.v4.runtime.Token;
 import iwostaq.yppj.YangPullParser.StatementType;
 import iwostaq.yppj.g.YangLexer;
@@ -18,7 +17,7 @@ public class YangSyntax {
   private static final String[] STATEMENTS_WITH_ID = new String[] { //
       "anyxml", //
       "base", // FORMATTER BLOCKER
-      "belongs_to", //
+      "belongs-to", //
       "bit", //
       "case", //
       "choice", //
@@ -27,11 +26,11 @@ public class YangSyntax {
       "feature", //
       "grouping", //
       "identity", //
-      "if_feature", //
+      "if-feature", //
       "import", //
       "include", //
       "leaf", //
-      "leaf_list", //
+      "leaf-list", //
       "list", //
       "module", //
       "rpc", //
@@ -48,17 +47,17 @@ public class YangSyntax {
       "default", //
       "description", //
       "enum", //
-      "error_app_tag", //
-      "error_message", //
-      "fraction_digits", //
+      "error-app-tag", //
+      "error-message", //
+      "fraction-digits", //
       "key", //
       "length", //
       "mandatory", //
-      "max_elements", //
-      "min_elements", //
+      "max-elements", //
+      "min-elements", //
       "must", //
       "namespace", //
-      "ordered_by", //
+      "ordered-by", //
       "organization", //
       "path", //
       "pattern", //
@@ -68,59 +67,63 @@ public class YangSyntax {
       "range", //
       "reference", //
       "refine", //
-      "require_instance", //
+      "require-instance", //
       "revision", //
-      "revision_date", //
+      "revision-date", //
       "status", //
       "unique", //
       "units", //
       "value", //
       "when", //
-      "yang_version", //
-      "yin_element"};
+      "yang-version", //
+      "yin-element"};
 
-  protected StatementToken[] stmtsWithId;
-  protected StatementToken[] stmtsWithArgs;
-  protected StatementToken[] stmtsWithoutArg;
+  protected StatementType[] stTypeWithId;
+  protected StatementType[] stTypeWithArgs;
+  protected StatementType[] stTypeWithoutArg;
 
-  private class StatementToken {
-    String name;
-    StatementType stmtType;
-
-    StatementToken(String name) {
-      assert (name != null);
-      this.name = name.replaceAll("_", "-");
-      this.stmtType = StatementType.valueOf(name.toUpperCase());
-    }
-  }
+  /*
+   * private class StatementToken implements Comparable<StatementToken> { String name; StatementType
+   * stmtType;
+   * 
+   * StatementToken(String name) { assert (name != null); this.name = name.replaceAll("_", "-");
+   * this.stmtType = StatementType.valueOf(name.toUpperCase()); }
+   * 
+   * @Override public int compareTo(StatementToken stmtToken) { return
+   * this.name.compareTo(stmtToken.name); } }
+   */
 
   /**
    * Constructor.
    * 
    */
   public YangSyntax() {
-    this.stmtsWithId = Arrays.stream(YangSyntax.STATEMENTS_WITH_ID).map(s -> new StatementToken(s))
-        .sorted((a, b) -> a.name.compareTo(b.name)).toArray(StatementToken[]::new);
+    this.stTypeWithId = Arrays.stream(YangSyntax.STATEMENTS_WITH_ID)
+        .map(s -> StatementType.valueOf(s.toUpperCase().replaceAll("-", "_")))
+        .toArray(StatementType[]::new);
 
-    this.stmtsWithArgs =
-        Arrays.stream(YangSyntax.STATEMENTS_WITH_ARGS).map(s -> new StatementToken(s))
-            .sorted((a, b) -> a.name.compareTo(b.name)).toArray(StatementToken[]::new);
+    this.stTypeWithArgs = Arrays.stream(YangSyntax.STATEMENTS_WITH_ARGS)
+        .map(s -> StatementType.valueOf(s.toUpperCase().replaceAll("-", "_")))
+        .toArray(StatementType[]::new);
 
-    this.stmtsWithoutArg =
-        Arrays.stream(YangSyntax.STATEMENTS_WITHOUT_ARG).map(s -> new StatementToken(s))
-            .sorted((a, b) -> a.name.compareTo(b.name)).toArray(StatementToken[]::new);
+    this.stTypeWithoutArg = Arrays.stream(YangSyntax.STATEMENTS_WITHOUT_ARG)
+        .map(s -> StatementType.valueOf(s.toUpperCase().replaceAll("-", "_")))
+        .toArray(StatementType[]::new);
   }
 
-  public Optional<StatementType> searchStatementsExpectingIdFor(Token token) {
-    return this.searchGivenStatementArrayFor(token, this.stmtsWithId);
+  public StatementType searchStatementsExpectingIdFor(Token token) {
+    return this.searchGivenStatementArrayFor(token, YangSyntax.STATEMENTS_WITH_ID,
+        this.stTypeWithId);
   }
 
-  public Optional<StatementType> searchStatementsExpectingArgumentsFor(Token token) {
-    return this.searchGivenStatementArrayFor(token, this.stmtsWithArgs);
+  public StatementType searchStatementsExpectingArgumentsFor(Token token) {
+    return this.searchGivenStatementArrayFor(token, YangSyntax.STATEMENTS_WITH_ARGS,
+        this.stTypeWithArgs);
   }
 
-  public Optional<StatementType> searchStatementsExpectingNoArgFor(Token token) {
-    return this.searchGivenStatementArrayFor(token, this.stmtsWithArgs);
+  public StatementType searchStatementsExpectingNoArgFor(Token token) {
+    return this.searchGivenStatementArrayFor(token, YangSyntax.STATEMENTS_WITHOUT_ARG,
+        this.stTypeWithoutArg);
   }
 
   public boolean isUnknownStatement(Token token) {
@@ -131,15 +134,22 @@ public class YangSyntax {
     return (token.getType() == YangLexer.S_RBR || token.getType() == YangLexer.S_SEMICOLON);
   }
 
-  protected Optional<StatementType> searchGivenStatementArrayFor(Token token,
-      StatementToken[] statementTokens) {
-    assert (statementTokens != null);
+  protected StatementType searchGivenStatementArrayFor(Token token, String[] statementNames,
+      StatementType[] statementTypes) {
+    assert (statementNames != null);
+    assert (statementTypes != null);
 
     if (token == null || (token.getType() != YangLexer.QUOTED_STRING
         && token.getType() != YangLexer.UNQUOTED_STRING)) {
-      return Optional.empty();
+      return null;
     }
-    return Arrays.stream(statementTokens).filter(s -> s.name.equals(token.getText()))
-        .map(s -> s.stmtType).findFirst();
+
+    int index = -1;
+    String tokenString = token.getText();
+    if ((index = Arrays.binarySearch(statementNames, tokenString)) < 0) {
+      return null;
+    } else {
+      return statementTypes[index];
+    }
   }
 }
