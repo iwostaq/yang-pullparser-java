@@ -73,15 +73,14 @@ mode SQUOTED_STRING;
 
 SQSTR
 :
-  ~( '\'' )+ -> type ( QUOTED_STRING )
-;
-
-SQUOT
-:
-  '\'' -> skip , popMode
+  ~( '\'' )* '\'' {
+    String tmpstr = getText();
+    setText(tmpstr.substring(0, tmpstr.length() - 1));
+  } -> type ( QUOTED_STRING ), popMode
 ;
 
 mode DQUOTED_STRING;
+
 
 DQSTR
 :
@@ -91,7 +90,10 @@ DQSTR
     | ESC_TAB
     | ESC_DQUOT
     | ESC_BS
-  )+ -> type ( QUOTED_STRING )
+  )* '"' {
+    String tmpstr = getText();
+    setText(tmpstr.substring(0, tmpstr.length() - 1));
+  }-> type ( QUOTED_STRING ), popMode
 ;
 
 ESC_NEWLINE
@@ -149,9 +151,4 @@ YANG_CHAR10
   '\uD800' .. '\uDFFF'
   | '\uFDD0' .. '\uFDEF'
   | '\uFFFE' .. '\uFFFF'
-;
-
-DQUOT
-:
-  '"' -> skip , popMode
 ;

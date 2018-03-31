@@ -19,4 +19,8 @@ module testmodule-00string {
     description '[0-9]+(d|days|h|hours|hr|m|min|minutes|'+
                  's|sec|seconds|w|weeks|wk|y|years|yr){0,1}';
   }
+  
+  revision 2018-03-01 {
+    description '';
+  }
 }

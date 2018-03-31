@@ -184,6 +184,14 @@ public class YppTest00Statement {
       ypp.next();
       Util.assertEndStatementWithStringArg(ypp, StatementType.REVISION, "2017-01-04");
 
+      ypp.next();
+      Util.assertStartStatementWithStringArg(ypp, StatementType.REVISION, "2018-03-01");
+      ypp.next();
+      Util.assertStartStatementWithStringArg(ypp, StatementType.DESCRIPTION, "");
+      ypp.next();
+      Util.assertEndStatementWithStringArg(ypp, StatementType.DESCRIPTION, "");
+      ypp.next();
+      Util.assertEndStatementWithStringArg(ypp, StatementType.REVISION, "2018-03-01");
 
     } catch (Exception e) {
       e.printStackTrace();
